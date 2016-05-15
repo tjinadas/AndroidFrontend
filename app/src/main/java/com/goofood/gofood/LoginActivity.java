@@ -11,6 +11,21 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.goofood.gofood.com.goofood.gofood.androidsql.CustomerDatabaseHelper;
+import com.goofood.gofood.com.goofood.gofood.utilities.VolleySingleton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -21,6 +36,10 @@ public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
     private static final int REQUEST_SIGNUP = 0;
+
+
+
+
 
     @Bind(R.id.input_email) EditText _emailText;
     @Bind(R.id.input_password)
@@ -65,26 +84,9 @@ public class LoginActivity extends AppCompatActivity {
 
         _loginButton.setEnabled(false);
 
-        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
-                R.style.AppTheme_Dark_Dialog);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Authenticating...");
-        progressDialog.show();
-
-        String email = _emailText.getText().toString();
-        String password = _passwordText.getText().toString();
+        LoginPOST();
 
         // TODO: Implement your own authentication logic here.
-
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        // On complete call either onLoginSuccess or onLoginFailed
-                        onLoginSuccess();
-                        // onLoginFailed();
-                        progressDialog.dismiss();
-                    }
-                }, 3000);
     }
 
     @Override
@@ -106,7 +108,9 @@ public class LoginActivity extends AppCompatActivity {
         moveTaskToBack(true);
     }
 
-    public void onLoginSuccess() {
+    public void onLoginSuccess(String jwtToken) {
+        CustomerDatabaseHelper authTable = new CustomerDatabaseHelper(this);
+        authTable.insertCustomerData(jwtToken);
         _loginButton.setEnabled(true);
         finish();
     }
@@ -139,6 +143,93 @@ public class LoginActivity extends AppCompatActivity {
 
         return valid;
     }
+
+
+    public void LoginPOST(){
+
+        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
+                R.style.AppTheme_Dark_Dialog);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Authenticating...");
+        progressDialog.show();
+
+        String email = _emailText.getText().toString();
+        String password = _passwordText.getText().toString();
+
+        final String endpointurl = "http://ec2-52-38-210-110.us-west-2.compute.amazonaws.com:8081/api/customerlogin";
+
+        RequestQueue requestqueue = VolleySingleton.getsInstance().getRequestQueue();
+
+        Map<String,String> params = new HashMap<String, String>();
+        params.put("userName",email);
+        params.put("password",password);
+
+
+
+        JsonObjectRequest sr = new JsonObjectRequest(
+                Request.Method.POST,
+                endpointurl,
+                new JSONObject(params),
+
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String token = response.getString("token");
+                            String message = response.getString("message");
+                            Log.d(TAG, message);
+                            Log.d(TAG, token);
+
+                            if(message.equals("user authenticated") ){
+                                Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+                                String jwtToken = response.getString("token");
+                                onLoginSuccess(jwtToken);
+                                progressDialog.dismiss();
+                            }
+                            else{
+                                //Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+                                onLoginFailed();
+                                progressDialog.dismiss();
+                            }
+
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getBaseContext(), error.toString(), Toast.LENGTH_LONG).show();
+                        onLoginFailed();
+                        progressDialog.dismiss();
+                    }
+                }) {
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
+        };
+
+        requestqueue.add(sr);
+
+    }
+
+    public void StoreToken() {
+
+
+
+        //SQLiteDatabase db = ;
+
+
+    }
+
+
 
 
 

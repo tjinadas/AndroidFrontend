@@ -10,6 +10,26 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.goofood.gofood.com.goofood.gofood.domain.Customer;
+import com.goofood.gofood.com.goofood.gofood.utilities.VolleySingleton;
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -26,7 +46,7 @@ public class SignupActivity extends AppCompatActivity {
     @Bind(R.id.btn_signup) Button _signupButton;
     @Bind(R.id.link_login) TextView _loginLink;
 
-    @Override
+
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
@@ -58,19 +78,15 @@ public class SignupActivity extends AppCompatActivity {
 
         _signupButton.setEnabled(false);
 
-        final ProgressDialog progressDialog = new ProgressDialog(SignupActivity.this,
-                R.style.AppTheme_Dark_Dialog);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Creating Account...");
-        progressDialog.show();
 
-        String name = _nameText.getText().toString();
-        String email = _emailText.getText().toString();
-        String password = _passwordText.getText().toString();
+
+
 
         // TODO: Implement your own signup logic here.
 
-        new android.os.Handler().postDelayed(
+        AccountCreationPOST();
+
+/*        new android.os.Handler().postDelayed(
                 new Runnable() {
                     public void run() {
                         // On complete call either onSignupSuccess or onSignupFailed
@@ -79,7 +95,7 @@ public class SignupActivity extends AppCompatActivity {
                         // onSignupFailed();
                         progressDialog.dismiss();
                     }
-                }, 3000);
+                }, 3000);*/
     }
 
     public void onSignupSuccess() {
@@ -89,7 +105,7 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     public void onSignupFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
+        //Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
 
         _signupButton.setEnabled(true);
     }
@@ -125,6 +141,79 @@ public class SignupActivity extends AppCompatActivity {
         }
 
         return valid;
+    }
+
+    public void AccountCreationPOST(){
+
+        final ProgressDialog progressDialog = new ProgressDialog(SignupActivity.this,
+                R.style.AppTheme_Dark_Dialog);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Creating Account...");
+        progressDialog.show();
+
+        final String name = _nameText.getText().toString();
+        final String email = _emailText.getText().toString();
+        final String password = _passwordText.getText().toString();
+        final String endpointurl = "http://ec2-52-38-210-110.us-west-2.compute.amazonaws.com:8081/api/accountcreationCustomer";
+
+        RequestQueue requestqueue = VolleySingleton.getsInstance().getRequestQueue();
+
+        Map<String,String> params = new HashMap<String, String>();
+        params.put("firstName",name);
+        params.put("lastName","test");
+        params.put("email",email);
+        params.put("password",password);
+
+
+        JsonObjectRequest sr = new JsonObjectRequest(
+                Request.Method.POST,
+                endpointurl,
+                new JSONObject(params),
+
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String message = response.getString("message");
+                            Log.d(TAG, message);
+
+                            if(message == "Account created!, Please login with your account credentials"){
+                                Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+                                onSignupSuccess();
+                                progressDialog.dismiss();
+                            }
+                            else{
+                                Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+                                onSignupFailed();
+                                progressDialog.dismiss();
+                            }
+
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getBaseContext(), error.toString(), Toast.LENGTH_LONG).show();
+                        onSignupFailed();
+                        progressDialog.dismiss();
+                    }
+                }) {
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
+        };
+
+        requestqueue.add(sr);
+
     }
 
 

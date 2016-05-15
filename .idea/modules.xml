@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/GoFood.iml" filepath="$PROJECT_DIR$/GoFood.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AndroidGoFoodTest.iml" filepath="$PROJECT_DIR$/AndroidGoFoodTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
