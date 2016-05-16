@@ -364,7 +364,7 @@ public class MainActivity extends AppCompatActivity implements MapWrapperLayout.
                             String token = response.getString("token");
                             String postalCode = response.getString("postalCode");
                             Log.d(TAG, token);
-                            
+
 
                         } catch (JSONException e) {
                             throw new RuntimeException(e);
@@ -385,9 +385,12 @@ public class MainActivity extends AppCompatActivity implements MapWrapperLayout.
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> headers = new HashMap<String, String>();
                 headers.put("Content-Type", "application/json; charset=utf-8");
+                headers.put("auth", "2");
                 return headers;
             }
         };
+
+        requestqueue.add(sr);
 
 
         String Address = "L1R1S5";
