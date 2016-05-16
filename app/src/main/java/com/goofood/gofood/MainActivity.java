@@ -361,9 +361,9 @@ public class MainActivity extends AppCompatActivity implements MapWrapperLayout.
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            String token = response.getString("token");
-                            String postalCode = response.getString("postalCode");
-                            Log.d(TAG, token);
+                            //String token = response.getJSONObject("Menus").getString("");
+                            String postalCode = response.getJSONArray("Menus").getJSONObject(0).getString("postalCode");
+                            Log.d(TAG, postalCode);
 
 
                         } catch (JSONException e) {
