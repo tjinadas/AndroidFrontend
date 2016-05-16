@@ -10,6 +10,6 @@
         android:layout_centerInParent="true"
         android:layout_marginTop="162dp"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/add_marker" />
+        android:src="@drawable/mapmarker" />
 
 </RelativeLayout>
